@@ -47,6 +47,9 @@ logging.getLogger('parsedatetime').setLevel(logging.INFO)
 # provide this for the cache.
 CACHE_LOGGER = logging.getLogger('dbt.cache')
 
+# Query logging, separate from the main logger
+QUERY_LOGGER = logging.getLogger('dbt.adapters.add_query')
+
 # Redirect warnings through our logging setup
 # They will be logged to a file below
 logging.captureWarnings(True)
@@ -109,7 +112,26 @@ def initialize_logger(debug_mode=False, path=None):
 
         CACHE_LOGGER.propagate = dbt.flags.LOG_CACHE_EVENTS
 
+        query_log_path = os.path.join(path, 'dbt.query.log')
+        query_logdir_handler = logging.handlers.TimedRotatingFileHandler(
+            filename=query_log_path,
+            when='d',
+            interval=1,
+            backupCount=7,
+        )
+
+        color_filter = ColorFilter()
+        query_logdir_handler.addFilter(color_filter)
+
+        query_logdir_handler.setFormatter(
+            logging.Formatter('[%(asctime)-18s] [%(threadName)s] %(message)s')
+        )
+        query_logdir_handler.setLevel(logging.DEBUG)
+
+        QUERY_LOGGER.addHandler(query_logdir_handler)
+
     initialized = True
 
 
 GLOBAL_LOGGER = logger
+

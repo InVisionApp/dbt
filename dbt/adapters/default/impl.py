@@ -12,6 +12,7 @@ import dbt.clients.agate_helper
 
 from dbt.contracts.connection import Connection
 from dbt.logger import GLOBAL_LOGGER as logger
+from dbt.logger import QUERY_LOGGER as query_logger
 from dbt.schema import Column
 from dbt.utils import filter_null_values
 
@@ -677,6 +678,8 @@ class DefaultAdapter(object):
 
             cursor = connection.handle.cursor()
             cursor.execute(sql, bindings)
+
+            query_logger.debug("[%s] [%s] [%0.3fs] %s" %(model_name, self.get_status(cursor), (time.time() - pre), sql[0:512].replace('\n', '\\n')))
 
             logger.debug("SQL status: %s in %0.2f seconds",
                          self.get_status(cursor), (time.time() - pre))
